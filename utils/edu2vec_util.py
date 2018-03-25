@@ -116,6 +116,41 @@ def convert_edus2ids(edus, edu2ids):
     return np.array(edu_ids_)
 
 """
+    根据edu的正太分布获取上下文
+    
+    # mu设置为当前中心  
+    mu, sigma = 0.5, .1
+    s = np.random.normal(loc=mu, scale=sigma, size=10)
+    
+    # 整个一批edu个数 batch_size
+    sample_id = int(batch_size * s)
+    
+    print(s)
+    
+    BATCH_SIZE的设置和平均每篇文章的edu个数有关
+"""
+def generate_sample_norm(index_edus):
+    up_boundary = len(index_edus) - 1
+    # 对处理得到的EDU下标列表进行处理
+    for index, edu_id in enumerate(index_edus):
+        context_ids = np.zeros(shape=(NORM_SAMPLING_NUM,), dtype=np.int32)
+        temp_edu_p, sigma = index/BATCH_SIZE, 1
+        s = np.random.normal(loc=temp_edu_p, scale=sigma, size=NORM_SAMPLING_NUM)  # 以当前edu_id在当前批次中的百分比确定
+
+        context_ids[idx] = 0
+
+        # 获取负采样结果, 取指定个数的随机的edu作为负样本，之后可能会做更多技巧
+        # 注意这里选用的是EDU编号，抛出0,最大值范围根据字典中edu个数确定, 不包括最大值，注意点
+        target_ids = np.random.randint(1, EDU_SIZE, NUM_SAMPLED + 1)
+        target_ids[-1] = edu_id  # 正样本
+
+        # 标志位
+        target_ids_tag = np.zeros(NUM_SAMPLED + 1)
+        target_ids_tag[-1] = 1  # 标志 正例
+
+        yield context_ids, target_ids, target_ids_tag
+
+"""
     可迭代地生成一批数据中的单个元素
     返回值：
         当前EDU上下文环境的edu下标
@@ -191,12 +226,15 @@ def batch_gen():
         edu2ids, _ = load_data(PDTB_EDUS_2_IDS), load_data(PDTB_IDS_2_VEC)
         edu_ids = convert_edus2ids(edus, edu2ids)  # 最终得到的训练数据
     # 构建迭代器
-    single_gen = generate_sample(edu_ids)
+    # single_gen = generate_sample(edu_ids)
+    # 根据正太分布进行上下文环境获取版本
+    single_gen = generate_sample_norm(edu_ids)
 
     # context_batch 存储上下文EDU下标,  target_sent 存储整例和负例EDU下标
     while True:
         # target_samples_tags = np.zeros(NUM_SAMPLED+1, dtype=np.int32)
         context_batch = np.zeros([BATCH_SIZE, 2*SKIP_WINDOW+1], dtype=np.int32)  # 每一行存储上下文环境EDU对应下标
+        context_batch_norm = np.zeros([BATCH_SIZE, NORM_SAMPLING_NUM], dtype=np.int32)  # 正太分布的上下文抽取
         target_batch = np.zeros([BATCH_SIZE, NUM_SAMPLED+1], dtype=np.int32)  # 存储负采样和正采样
         target_tag_batch = np.zeros([BATCH_SIZE, NUM_SAMPLED+1], dtype=np.float32)
         for index in range(BATCH_SIZE):

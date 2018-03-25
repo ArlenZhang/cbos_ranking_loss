@@ -15,8 +15,10 @@
 from tensorflow.contrib.tensorboard.plugins import projector
 import tensorflow as tf
 from code.utils.edu2vec_util import *
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-# os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
+
 
 class cbos_model:
     def __init__(self, dataset, vocab_size, embed_size, batch_size, num_sampled, learning_rate):
@@ -147,7 +149,7 @@ class cbos_model:
                     # writer.add_summary(summary, global_step=index)
                     total_loss += loss_batch
                     if (index + 1) % self.skip_step == 0:
-                        print('训练第'+str(index+1)+'次计算的平均损失：')
+                        print('训练第' + str(index + 1) + '次计算的平均损失：')
                         print(total_loss / self.skip_step)
                         total_loss = 0.0
                         saver.save(sess, self.sess_p, index)
@@ -185,6 +187,7 @@ class cbos_model:
             saver_embed = tf.train.Saver([embedding_var])
             saver_embed.save(sess, os.path.join(visual_fld, 'model_e2v.ckpt'))
 
+
 # 得到最终dict[edu] = vector，存储的不是ids2vec，而是edu_embedding，因为ids2vec是根据上一层输出二计算的道德先验知识
 def update_embedding_matrix(final_m):
     if CORPUS_TYPE is "Gigaword":
@@ -206,8 +209,10 @@ def update_embedding_matrix(final_m):
         with open(PDTB_EDU_EMBEDDING_PKL, 'wb') as f:
             pkl.dump(result_embedding, f)
 
+
 def gen():
     yield from batch_gen()
+
 
 def main_edu():
     # 获取EDU级的数据集
@@ -225,6 +230,7 @@ def main_edu():
         model.visualize(VISUAL_FLD_Gigaword, NUM_VISUALIZE)
     else:
         model.visualize(VISUAL_FLD_PDTB, NUM_VISUALIZE)
+
 
 """ 
     run tensorboard --logdir='visualization_e2v_pdtb'

@@ -11,6 +11,7 @@ RANDOM_DOC_NUM = 30000  # 选择5万个篇章进行训练
 BATCH_SIZE = 1000
 EMBED_SIZE = 128  # EDU表示的维度 和 word vector 表示中保持一致
 SKIP_WINDOW = 2  # context上下文的单向跨度
+NORM_SAMPLING_NUM = 30  # 从上下文按照正太分布抽取10句作为上下文环境
 NUM_SAMPLED = 4  # 负采样个数
 LEARNING_RATE = 0.003  # 学习率
 NUM_TRAIN_STEPS = 100000  # 训练次数 100000
