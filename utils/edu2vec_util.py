@@ -134,10 +134,14 @@ def generate_sample_norm(index_edus):
     # 对处理得到的EDU下标列表进行处理
     for index, edu_id in enumerate(index_edus):
         context_ids = np.zeros(shape=(NORM_SAMPLING_NUM,), dtype=np.int32)
-        temp_edu_p, sigma = index/BATCH_SIZE, 1
-        s = np.random.normal(loc=temp_edu_p, scale=sigma, size=NORM_SAMPLING_NUM)  # 以当前edu_id在当前批次中的百分比确定
+        temp_edu_p, sigma = index/BATCH_SIZE, .1
+        if index < NORM_SAMPLING:
+            # 根据篇章位置，采用正态分布采样，同时对超出篇章的部分做0填充。给出不固定的采样方案
+            # 更新数据，按照每个篇章的edu进行读取、遍历
 
-        context_ids[idx] = 0
+        else:
+            s = np.random.normal(loc=temp_edu_p, scale=sigma, size=NORM_SAMPLING_NUM)  # 以当前edu_id在当前批次中的百分比确定
+
 
         # 获取负采样结果, 取指定个数的随机的edu作为负样本，之后可能会做更多技巧
         # 注意这里选用的是EDU编号，抛出0,最大值范围根据字典中edu个数确定, 不包括最大值，注意点
